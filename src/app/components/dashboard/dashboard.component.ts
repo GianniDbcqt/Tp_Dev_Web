@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SerresComponent } from '../serres/serres.component';
 import {SerreService} from '../../services/serre.service';
+import { Serre } from '../../models/serre';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,9 +23,14 @@ export class DashboardComponent {
 
   ajouterSerre() {
     const newId = this.generateNewSerreId();
-    const newSerre = { id: newId, nom: `Serre ${newId}` };
+    const newSerre: Serre = {
+      id: newId,
+      nom: `Serre ${newId}`,
+      location: '',
+      plantType: '',
+      capteurs: {}
+    };
     this.serreService.addSerre(newSerre);
-
   }
 
   generateNewSerreId(): number {

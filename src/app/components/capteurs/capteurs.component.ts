@@ -1,9 +1,10 @@
+// capteurs.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {SerreService} from '../../services/serre.service';
-
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SerreService } from '../../services/serre.service';
+import { Serre } from '../../models/serre';
 
 @Component({
   selector: 'app-capteurs',
@@ -14,68 +15,98 @@ import {SerreService} from '../../services/serre.service';
 })
 export class CapteursComponent implements OnInit {
   serreId!: number;
+  serreData: Serre | null = null; // Use the Serre model
+  originalSerreName = '';
+  editingName = false;
+  loading = true;
+  notFound = false;
 
   constructor(private route: ActivatedRoute, private serreService: SerreService) { }
-
-  saveSerreName() {
-    this.serreService.updateSerreName(this.serreId, this.serreData.name);
-    this.editingName = false;
-  }
-
-  serreData: any = {
-    temperature: null,
-    humidity: null,
-    windowStatus: null,
-    waterLevel: null,
-    location: 'Default Location',
-    plantType: 'Default Plant',
-    name: ''
-  };
-  originalSerreName: string = '';
-  editingName: boolean = false;
-
-
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.serreId = +params['id'];
-      this.fetchSerreData(this.serreId);
+      this.loadSerreData();
     });
   }
 
-  fetchSerreData(serreId: number) {
-    if (serreId === 1) {
-      this.serreData = {
-        temperature: 25,
-        humidity: 60,
-        windowStatus: 'Open',
-        waterLevel: 80,
-        location: 'Green House A',
-        plantType: 'Tomatoes',
-        name: 'Serre 1'
-      };
-    } else if (serreId === 2) {
-      this.serreData = {
-        temperature: 22,
-        humidity: 75,
-        windowStatus: 'Closed',
-        waterLevel: 30,
-        location: 'Green House B',
-        plantType: 'Lettuce',
-        name: 'Serre 2'
-      };
-    }
-    this.originalSerreName = this.serreData.name;
+  loadSerreData() {
+    this.loading = true;
+    this.notFound = false;
+    const serre = this.serreService.getSerres().find(s => s.id === this.serreId);
 
+    if (serre) {
+      this.serreData = { ...serre };
+      this.originalSerreName = this.serreData.nom;
+      // Now, fetch additional data if required (and merge with serreData)
+      this.fetchAdditionalData(this.serreId);
+    } else {
+      this.notFound = true;
+    }
+    this.loading = false;
+  }
+
+
+  fetchAdditionalData(serreId: number) {
+    if (this.serreData) {
+      this.serreData.capteurs = {
+        temperature: undefined,
+        humidity: undefined,
+        windowStatus: undefined,
+        waterLevel: undefined
+      };
+
+      if (serreId === 1) {
+        this.serreData.capteurs = {
+          temperature: 25,
+          humidity: 60,
+          windowStatus: 'Open',
+          waterLevel: 80
+        };
+      } else if (serreId === 2) {
+        this.serreData.capteurs = {
+          temperature: 22,
+          humidity: 75,
+          windowStatus: 'Closed',
+          waterLevel: 30
+        };
+      }
+    } else {
+      console.error("Serre data is null.  Cannot fetch additional data.");
+    }
+  }
+
+  saveSerreName() {
+    if (this.serreData) {
+      this.serreService.updateSerreName(this.serreId, this.serreData.nom);
+      this.originalSerreName = this.serreData.nom;
+      this.editingName = false;
+    }
   }
 
   editSerreName() {
     this.editingName = true;
   }
 
-
   cancelNameEdit() {
-    this.serreData.name = this.originalSerreName;
+    if (this.serreData) {
+      this.serreData.nom = this.originalSerreName;
+    }
     this.editingName = false;
+  }
+
+  updateSerre() {
+    if (this.serreData) {
+      // Update location and plantType in the SerreService
+      this.serreService.updateSerre(this.serreId, {
+        location: this.serreData.location,
+        plantType: this.serreData.plantType
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    this.updateSerre()
+
   }
 }
