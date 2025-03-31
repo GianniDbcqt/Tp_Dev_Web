@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SerresComponent } from '../serres/serres.component';
+import {SerreService} from '../../services/serre.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,19 +12,36 @@ import { SerresComponent } from '../serres/serres.component';
   imports: [CommonModule, SerresComponent]
 })
 export class DashboardComponent {
-  serres = [
-    { id: 1, nom: 'Serre 1' },
-    { id: 2, nom: 'Serre 2' }
-  ];
+  serres: any[] = [];
 
-  constructor(private router: Router) {}
+  constructor(private serreService: SerreService) { }
+
+  ngOnInit() {
+    this.serres = this.serreService.getSerres();
+  }
 
   ajouterSerre() {
-    const newId = this.serres.length ? this.serres[this.serres.length - 1].id + 1 : 1;
-    this.serres.push({ id: newId, nom: `Serre ${newId}` });
+    const newId = this.generateNewSerreId();
+    const newSerre = { id: newId, nom: `Serre ${newId}` };
+    this.serreService.addSerre(newSerre);
+
+  }
+
+  generateNewSerreId(): number {
+    if (this.serreService.serres.length === 0) {
+      return 1;
+    } else {
+      let maxId = 0;
+      for (let serre of this.serreService.serres) {
+        if (serre.id > maxId) {
+          maxId = serre.id;
+        }
+      }
+      return maxId + 1;
+    }
   }
 
   supprimerSerre(index: number) {
-    this.serres.splice(index, 1);
+    this.serreService.deleteSerre(index); // Use service method
   }
 }
