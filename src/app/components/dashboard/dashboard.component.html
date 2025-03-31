@@ -1,0 +1,21 @@
+<div class="m-3 flex flex-col gap-5 w-full">
+  <div class="text-xl text-green-700 font-bold">
+    Dashboard de serres
+  </div>
+
+  <div class="flex gap-3 flex-wrap">
+    <app-serres
+      *ngFor="let serre of serres; let i = index"
+      [name]="serre.nom"
+      (supprimerSerre)="supprimerSerre(i)">
+    </app-serres>
+  </div>
+
+  <div class="flex gap-3">
+    <button (click)="ajouterSerre()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700">
+      Ajouter une serre
+    </button>
+  </div>
+
+
+</div>
