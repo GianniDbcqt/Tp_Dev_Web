@@ -26,8 +26,4 @@ export class DashboardComponent {
   supprimerSerre(index: number) {
     this.serres.splice(index, 1);
   }
-
-  voirCapteurs(serreId: number) {
-    this.router.navigate(['/capteurs', serreId]);
-  }
 }
