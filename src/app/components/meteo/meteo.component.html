@@ -1,0 +1,16 @@
+<div class="p-4">
+  <input type="text" [(ngModel)]="ville" placeholder="Enter city name" class="border rounded p-2">
+  <button (click)="getMeteo()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2">
+    Get Weather
+  </button>
+
+
+  <div *ngIf="error" class="text-red-500 mt-2">{{error}}</div>
+
+
+  <div *ngIf="meteoData" class="mt-4 bg-white rounded-lg shadow p-4">
+    <h3 class="text-lg font-medium">{{ meteoData.name }}, {{ meteoData.sys.country }}</h3>
+    <p>Temperature: {{ meteoData.main.temp }}°C</p>
+    <p>Conditions: {{ meteoData.weather[0].description }}</p>
+  </div>
+</div>

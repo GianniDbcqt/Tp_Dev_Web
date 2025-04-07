@@ -1,4 +1,4 @@
-// capteurs.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { Serre } from '../../models/serre';
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class CapteursComponent implements OnInit {
+export class CapteursComponent  {
   serreId!: number;
   serreData: Serre | null = null; // Use the Serre model
   originalSerreName = '';
@@ -23,7 +23,7 @@ export class CapteursComponent implements OnInit {
 
   constructor(private route: ActivatedRoute, private serreService: SerreService) { }
 
-  ngOnInit(): void {
+ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.serreId = +params['id'];
       this.loadSerreData();

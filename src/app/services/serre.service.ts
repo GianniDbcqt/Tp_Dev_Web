@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Serre} from '../models/serre';
+import { ApiService } from './api.service';
 
 
 @Injectable({
@@ -33,7 +34,11 @@ export class SerreService {
     }
   ];
 
-  constructor() { }
+  constructor(private apiService: ApiService) {}
+
+  checkPing(): Promise<boolean> {
+    return this.apiService.checkPing();
+  }
 
   getSerres() {
     return this.serres;
