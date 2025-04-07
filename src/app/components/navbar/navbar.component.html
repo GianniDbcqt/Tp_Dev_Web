@@ -17,11 +17,11 @@
 	<div class="p-3 text-xs flex items-center gap-3">
 		<div>Etat de l'API :</div>
 		<div class="px-1 py-0.5 rounded bg-green-100
-		text-green-600 border border-green-600">
+		text-green-600 border border-green-600" *ngIf="apiState">
 			En Ligne
 		</div>
 		<div class="px-1 py-0.5 rounded bg-red-100
-		text-red-600 border border-red-600">
+		text-red-600 border border-red-600" *ngIf="!apiState">
 			Hors-Ligne
 		</div>
 	</div>
