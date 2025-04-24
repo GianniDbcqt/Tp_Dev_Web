@@ -1,63 +1,73 @@
-<!-- capteurs.component.html -->
-<div *ngIf="loading" class="p-6 text-center">
-  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-green-700 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
-  Loading serre data...
-</div>
+<div *ngIf="!loading && serreData" class="p-4 md:p-6 space-y-6">
 
-<div *ngIf="!loading && notFound" class="p-6 text-center">
-  Serre not found.
-</div>
-
-
-<div *ngIf="!loading && serreData" class="p-6 bg-white rounded-lg shadow-md">
-  <div class="flex items-center justify-between mb-4 relative">
-    <h2 *ngIf="!editingName" class="text-2xl font-semibold text-gray-800 cursor-pointer" (click)="editSerreName()">{{ serreData.nom }}</h2>
-    <div *ngIf="editingName" class="flex items-center">
-      <input type="text" [(ngModel)]="serreData.nom" class="border rounded px-2 py-1 mr-2">
-      <button (click)="saveSerreName()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Save</button>
-      <button (click)="cancelNameEdit()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-2">Cancel</button>
+  <div class="bg-white p-4 rounded-lg shadow-md">
+    <div class="flex items-center justify-between mb-4 relative">
+      <h2 *ngIf="!editingName" class="text-2xl font-semibold text-gray-800 cursor-pointer hover:text-emerald-700 transition-colors" (click)="editSerreName()">{{ serreData.nom }}</h2>
+      <div *ngIf="editingName" class="flex items-center flex-grow mr-8">
+        <input type="text" [(ngModel)]="serreData.nom" class="border rounded px-2 py-1 mr-2 flex-grow focus:ring-emerald-500 focus:border-emerald-500">
+        <button (click)="saveSerreName()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1 px-2 rounded text-sm whitespace-nowrap">Sauver</button>
+        <button (click)="cancelNameEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded ml-2 text-sm whitespace-nowrap">Annuler</button>
+      </div>
+      <button *ngIf="!editingName" (click)="editSerreName()" class="absolute right-0 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100" aria-label="Modifier le nom">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+        </svg>
+      </button>
     </div>
-
-    <svg *ngIf="!editingName" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 absolute right-0 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer" (click)="editSerreName()">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-    </svg>
-
-
-
-  </div>
-
-
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <p class="text-gray-600">Temperature:</p>
-      <p class="text-lg font-medium text-green-700">{{ serreData.capteurs?.temperature || 'N/A' }}°C</p>
-    </div>
-    <div>
-      <p class="text-gray-600">Humidity:</p>
-      <p class="text-lg font-medium text-green-700">{{ serreData.capteurs?.humidity || 'N/A' }}%</p>
-    </div>
-    <div>
-      <p class="text-gray-600">Window Status:</p>
-      <p class="text-lg font-medium text-green-700">{{ serreData.capteurs?.windowStatus || 'N/A' }}</p>
-    </div>
-    <div>
-      <p class="text-gray-600">Water Level:</p>
-      <div class="relative pt-1">
-        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
-          <div [style.width.%]="serreData.capteurs?.waterLevel || 0" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-700"></div>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4">
+      <div>
+        <label for="location" class="block text-gray-600 mb-1 font-medium">Localisation :</label>
+        <input type="text" id="location" [(ngModel)]="serreData.location" (change)="saveChanges()" class="border rounded px-2 py-1 w-full focus:ring-emerald-500 focus:border-emerald-500">
+      </div>
+      <div>
+        <label for="plantType" class="block text-gray-600 mb-1 font-medium">Type de Plante :</label>
+        <input type="text" id="plantType" [(ngModel)]="serreData.plantType" (change)="saveChanges()" class="border rounded px-2 py-1 w-full focus:ring-emerald-500 focus:border-emerald-500">
       </div>
     </div>
-    <div>
-      <label for="location" class="text-gray-600">Location:</label><br>
-      <input type="text" id="location" [(ngModel)]="serreData.location" class="border rounded px-2 py-1 w-full">
+  </div>
+
+  <div class="bg-white p-4 rounded-lg shadow-md">
+    <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">Capteurs Actuels</h3>
+
+    <div *ngIf="serreData && serreData.sensors && serreData.sensors.length > 0; else noSensors">
+      <div *ngFor="let sensor of serreData.sensors">
+        <p *ngIf="sensor?.type">
+          {{ formatSensorKey(sensor.type) }}: {{ getFormattedSensorValue(sensor.type) }}
+          <button (click)="removeSensor(sensor.type)">Supprimer</button>
+        </p>
+      </div>
     </div>
-    <div>
-      <label for="plantType" class="text-gray-600">Plant Type:</label><br>
-      <input type="text" id="plantType" [(ngModel)]="serreData.plantType" class="border rounded px-2 py-1 w-full">
+    <ng-template #noSensors>
+      <div class="sm:col-span-2 lg:col-span-3 text-center text-gray-500 italic py-4 flex items-center justify-center">
+        <p>Aucun capteur actif pour cette serre.</p>
+      </div>
+    </ng-template>
+
+    <div class="border-t border-gray-200 pt-4">
+      <h4 class="text-md font-semibold text-gray-700 mb-2">Ajouter un Nouveau Capteur</h4>
+      <div *ngIf="getAvailableSensorsToAdd().length > 0; else noSensorsToAdd">
+        <select [(ngModel)]="selectedSensorToAdd" class="border rounded px-2 py-1.5 text-sm mb-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+          <option [ngValue]="null" disabled>Choisir un type de capteur...</option>
+          <option *ngFor="let sensorType of getAvailableSensorsToAdd()" [value]="sensorType">
+            {{ formatSensorKey(sensorType) }}
+          </option>
+        </select>
+
+        <div *ngIf="selectedSensorToAdd" class="mb-2">
+          <label [for]="selectedSensorToAdd" class="block text-gray-600 mb-1 font-medium">Valeur pour {{ formatSensorKey(selectedSensorToAdd) }} :</label>
+          <input [type]="getInputType(selectedSensorToAdd)" [id]="selectedSensorToAdd" [(ngModel)]="nouveauCapteur[selectedSensorToAdd]" [name]="selectedSensorToAdd" class="border rounded px-2 py-1 w-full focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <button (click)="addSensor()" [disabled]="!selectedSensorToAdd" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+          Ajouter Capteur
+        </button>
+      </div>
+
+      <ng-template #noSensorsToAdd>
+        <p class="text-sm text-gray-500 italic">
+          Tous les types de capteurs possibles sont déjà configurés pour cette serre.
+        </p>
+      </ng-template>
     </div>
   </div>
 </div>

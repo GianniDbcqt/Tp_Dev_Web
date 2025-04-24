@@ -5,17 +5,24 @@ import {Router} from '@angular/router';
   selector: 'app-serres',
   templateUrl: './serres.component.html',
   styleUrls: ['./serres.component.css'],
-  standalone: true // Assure-toi que c'est bien standalone
+  standalone: true
 })
 export class SerresComponent {
   @Input() name: string = "";
-  @Input() id!: number;
+  @Input() id: number | undefined;
   @Output() supprimerSerre: EventEmitter<void> = new EventEmitter();
 
   constructor(private router: Router) {}
 
 
-  navigateToSerreDetails() {
-    this.router.navigate(['/capteurs', this.id]);
+  navigateToSerreDetails(): void {
+    if (this.id !== undefined) {
+      this.router.navigate(['/capteurs', this.id]);
+    }
+     else {
+      console.error("ID de la serre non défini !");
+
+    }
   }
 }
+

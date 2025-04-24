@@ -1,16 +1,69 @@
-<div class="p-4">
-  <input type="text" [(ngModel)]="ville" placeholder="Enter city name" class="border rounded p-2">
-  <button (click)="getMeteo()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2">
-    Get Weather
-  </button>
+<div class="weather-widget">
+  <h2>Météo</h2>
+
+  <!-- Champ de recherche et bouton -->
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="ville"
+      placeholder="Entrez une ville..."
+      (keyup.enter)="getMeteo()"
+    />
+    <button (click)="getMeteo()">Rechercher</button>
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div *ngIf="loading" class="loading-indicator">
+    Chargement des données...
+  </div>
+
+  <!-- Affichage de l'erreur -->
+  <div *ngIf="error && !loading" class="error-message" style="color: red; margin-top: 15px; text-align: center;">
+    {{ error }}
+  </div>
 
 
-  <div *ngIf="error" class="text-red-500 mt-2">{{error}}</div>
+  <div *ngIf="currentWeather && forecastData && !loading && !error" class="weather-info">
 
+    <!-- Météo actuelle -->
+    <h3>{{ currentWeather.name }}</h3>
+    <div class="current-weather">
+      <p class="temperature">{{ roundTemp(currentWeather.main?.temp) }}°C</p>
+      <p class="description">
+        <img
+          *ngIf="currentWeather.weather?.[0]?.icon"
+          [src]="getWeatherIconUrl(currentWeather.weather[0].icon)"
+          [alt]="currentWeather.weather[0].description"
+          class="weather-icon-large"
+          style="width: 50px; height: 50px; vertical-align: middle;"
+        />
+        {{ currentWeather.weather?.[0]?.description | titlecase }}
+      </p>
+      <p class="feels-like">Ressenti: {{ roundTemp(currentWeather.main?.feels_like) }}°C</p>
+      <p class="min-max">
+        Min: {{ roundTemp(currentWeather.main?.temp_min) }}°C / Max: {{ roundTemp(currentWeather.main?.temp_max) }}°C
+      </p>
+    </div>
 
-  <div *ngIf="meteoData" class="mt-4 bg-white rounded-lg shadow p-4">
-    <h3 class="text-lg font-medium">{{ meteoData.name }}, {{ meteoData.sys.country }}</h3>
-    <p>Temperature: {{ meteoData.main.temp }}°C</p>
-    <p>Conditions: {{ meteoData.weather[0].description }}</p>
+    <!-- Prévisions Horaires -->
+    <h4>Prévisions Horaires</h4>
+    <div class="hourly-forecast">
+      <div *ngFor="let forecast of forecastData.list" class="hour">
+        <p class="time">{{ getHourFromTimestamp(forecast.dt) }}</p>
+        <img
+          *ngIf="forecast.weather?.[0]?.icon"
+          [src]="getWeatherIconUrl(forecast.weather[0].icon, '')"
+          [alt]="forecast.weather[0].description"
+          style="width: 30px; height: 30px;"
+        />
+        <p class="temp">{{ roundTemp(forecast.main?.temp) }}°C</p>
+      </div>
+    </div>
+
+    <div class="details">
+      <p>Humidité: {{ currentWeather.main?.humidity }}%</p>
+      <p>Vent: {{ getWindSpeedKmH(currentWeather.wind?.speed) }} km/h</p>
+    </div>
+
   </div>
 </div>

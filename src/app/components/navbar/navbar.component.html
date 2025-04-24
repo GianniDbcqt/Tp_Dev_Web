@@ -1,28 +1,31 @@
-<div class="border-r flex flex-col border-gray-200 justify-between h-full">
-	<div>
-		<div class="p-3 border-b border-gray-200">
-			Serre Manager
-		</div>
-		<div class="m-3 flex flex-col gap-3">
-			<div class="hover:bg-gray-100 rounded cursor-pointer p-3" [routerLink]="['dashboard']"
-				 routerLinkActive="bg-gray-200">
-				Dashboard
-			</div>
+<div class="border-r bg-green-600 flex flex-col border-b-green-400 justify-between h-full">
+  <div>
+
+    <div class="p-6 text-3xl font-bold text-red-600 border-b border-gray-700 flex items-center justify-center">
+      <span class="mr-2">
+        <img src="https://www.lejardindalbert.fr/wp-content/uploads/2022/12/logo-serre.png" alt="serre Logo" class="w-50 font-stretch-50% mr-2">
+      </span>
+    </div>
+    <div class="m-3 flex flex-col gap-3">
+      <div class="hover:bg-gray-100 rounded cursor-pointer p-3" [routerLink]="['dashboard']"
+           routerLinkActive="bg-gray-200">
+        Dashboard
+      </div>
       <div class="hover:bg-gray-100 rounded cursor-pointer p-3" [routerLink]="['/meteo']"
            routerLinkActive="bg-gray-200">
         Météo
       </div>
-		</div>
-	</div>
-	<div class="p-3 text-xs flex items-center gap-3">
-		<div>Etat de l'API :</div>
-		<div class="px-1 py-0.5 rounded bg-green-100
-		text-green-600 border border-green-600" *ngIf="apiState">
-			En Ligne
-		</div>
-		<div class="px-1 py-0.5 rounded bg-red-100
-		text-red-600 border border-red-600" *ngIf="!apiState">
-			Hors-Ligne
-		</div>
-	</div>
+    </div>
+  </div>
+  <div class="p-3 text-xs flex items-center gap-3">
+    <div>Etat de l'API :</div>
+    <div class="px-1 py-0.5 rounded bg-green-100
+		text-green-600 border border-green-600"*ngIf="apiState">
+      En Ligne
+    </div>
+    <div class="px-1 py-0.5 rounded bg-red-100
+		text-red-600 border border-red-600"*ngIf="!apiState">
+      Hors-Ligne
+    </div>
+  </div>
 </div>

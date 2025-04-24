@@ -4,12 +4,7 @@
   </div>
 
   <div class="flex gap-3 flex-wrap">
-    <app-serres
-      *ngFor="let serre of serres; let i = index"
-      [name]="serre.nom"
-      [id]="serre.id"
-      (supprimerSerre)="supprimerSerre(i)">
-    </app-serres>
+    <app-serres *ngFor="let serre of serres; let i = index" [name]="serre.nom" [id]="serre.id" (supprimerSerre)="supprimerSerre(serre)"></app-serres>
   </div>
 
   <div class="flex gap-3">

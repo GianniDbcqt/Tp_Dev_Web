@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SerresComponent } from '../serres/serres.component';
 import {SerreService} from '../../services/serre.service';
 import { Serre } from '../../models/serre';
+import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -12,42 +14,76 @@ import { Serre } from '../../models/serre';
   standalone: true,
   imports: [CommonModule, SerresComponent]
 })
-export class DashboardComponent {
-  serres: any[] = [];
+export class DashboardComponent implements OnInit , OnDestroy{
+  serres: Serre[] = [];
+  private serresSubscription!: Subscription;
 
-  constructor(private serreService: SerreService) { }
+
+  constructor(private serreService: SerreService, private router: Router) { }
+
 
   ngOnInit() {
-    this.serres = this.serreService.getSerres();
+
+    this.serresSubscription = this.serreService.serres$.subscribe({
+      next: serres => this.serres = serres,
+      error: error => console.error("Erreur lors de la récupération des serres :", error)
+    });
+
+
   }
 
   ajouterSerre() {
-    const newId = this.generateNewSerreId();
     const newSerre: Serre = {
-      id: newId,
-      nom: `Serre ${newId}`,
+      nom: this.generateNewSerreName(),
       location: '',
       plantType: '',
-      capteurs: {}
+      sensors: []
     };
-    this.serreService.addSerre(newSerre);
+
+    this.serreService.addSerre(newSerre).subscribe({
+      next: () => {
+
+      },
+      error: error => {
+        console.error("Erreur lors de l'ajout de la serre :", error);
+
+      }
+    });
   }
 
-  generateNewSerreId(): number {
-    if (this.serreService.serres.length === 0) {
-      return 1;
-    } else {
-      let maxId = 0;
-      for (let serre of this.serreService.serres) {
-        if (serre.id > maxId) {
-          maxId = serre.id;
-        }
-      }
-      return maxId + 1;
+
+
+  generateNewSerreName(): string {
+    return `Serre ${this.serres.length + 1}`;
+  }
+
+
+  supprimerSerre(serre: Serre) {
+
+    const serreId = serre?.id
+    if (serreId == undefined) {
+      return
+    }
+
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la serre ${serre.nom} ?`)) {
+      this.serreService.deleteSerre(serreId).subscribe({
+        next: () => {
+
+
+        },
+        error: error => console.error("Erreur lors de la suppression :", error)
+      });
+    }
+
+  }
+
+
+  ngOnDestroy(): void {
+    if(this.serresSubscription) {
+      this.serresSubscription.unsubscribe();
+
     }
   }
 
-  supprimerSerre(index: number) {
-    this.serreService.deleteSerre(index); // Use service method
-  }
+
 }
