@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SerreService } from '../../services/serre.service';
 import { Serre } from '../../models/serre';
-import { Sensor} from '../../models/Sensor';
+import { Sensor } from '../../models/Sensor';
 import { Subscription, switchMap } from 'rxjs';
 
 @Component({
@@ -25,6 +25,9 @@ export class CapteursComponent implements OnInit, OnDestroy {
   allPossibleSensorTypes = ["temperature", "humidity", "light", "soilMoisture", "waterLevel", "windowState"];
   selectedSensorToAdd: string | null = null;
   nouveauCapteur: any = {};
+  existingSensor: Sensor | null = null;
+  valeurCapteur: any; // Variable pour le two-way binding
+
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -41,7 +44,6 @@ export class CapteursComponent implements OnInit, OnDestroy {
       next: serre => {
         if (serre) {
           this.serreData = serre;
-          console.log("SerreData dans le composant :", this.serreData); // <-- Ajoute ce console.log
           this.originalSerreName = serre.nom;
           this.loading = false;
         } else {
@@ -57,6 +59,12 @@ export class CapteursComponent implements OnInit, OnDestroy {
         this.router.navigate(['/dashboard']);
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.serreSubscription) {
+      this.serreSubscription.unsubscribe();
+    }
   }
 
   editSerreName() {
@@ -87,49 +95,74 @@ export class CapteursComponent implements OnInit, OnDestroy {
     }
   }
 
-  getExistingSensorKeys(): string[] {
-    return this.serreData?.sensors ? this.serreData.sensors.map(s => s.type) : [];
+  getExistingSensorKeys() {
+    return this.serreData?.sensors?.map(s => s.type) ?? [];
   }
 
-  getAvailableSensorsToAdd(): string[] {
-    return this.allPossibleSensorTypes.filter(type => !this.getExistingSensorKeys().includes(type));
+  getAvailableSensorsToAdd() {
+    return this.allPossibleSensorTypes;
   }
 
   addSensor() {
-    if (!this.serreData || !this.selectedSensorToAdd) return;
+    if (!this.serreData || !this.selectedSensorToAdd) {
+      return;
+    }
 
-    if (!this.serreData.sensors) {
-      this.serreData.sensors = [];
+    const existingSensorType = this.serreData.sensors?.find(s => s.type === this.selectedSensorToAdd);
+    if (existingSensorType && !this.existingSensor) {
+      alert('Un capteur de ce type existe déjà pour cette serre.');
+      this.selectedSensorToAdd = existingSensorType.type;
+      this.existingSensor = existingSensorType;
+      this.valeurCapteur = existingSensorType.valeur;
+
+      return;
     }
 
     const newSensor: any = {
-      serreId: this.serreId,
       type: this.selectedSensorToAdd,
-      valeur: this.nouveauCapteur[this.selectedSensorToAdd] || 0,
+      valeur: this.valeurCapteur,
       dateReleve: new Date()
     };
 
-    newSensor[this.selectedSensorToAdd] = this.nouveauCapteur[this.selectedSensorToAdd] || 0;
+    if (this.existingSensor) {
+      newSensor.id = this.existingSensor.id;
+      this.serreService.updateCapteur(this.serreId, newSensor).subscribe({
+        next: updatedSensor => {
+          const index = this.serreData?.sensors?.findIndex(s => s.id === updatedSensor.id) ?? -1;
+          if (index !== -1 && this.serreData?.sensors) {
+            this.serreData.sensors[index] = updatedSensor;
+          }
+          this.resetForm();
+        },
+        error: error => console.error("Erreur mise à jour capteur :", error)
+      });
+    } else {
+      this.serreService.ajouterCapteur(this.serreId, newSensor).subscribe({
+        next: addedSensor => {
+          if (this.serreData) {
+            if (!this.serreData.sensors) {
+              this.serreData.sensors = [];
+            }
+            this.serreData.sensors.push(addedSensor);
+          }
+        },
+        error: error => console.error("Erreur ajout capteur :", error)
 
-    this.serreService.ajouterCapteur(this.serreId, newSensor).subscribe({
-      next: addedSensor => {
-        this.serreData!.sensors = [...this.serreData!.sensors ?? [], addedSensor];
-        this.selectedSensorToAdd = null;
-        this.nouveauCapteur = {};
-      },
-      error: error => console.error("Erreur ajout capteur :", error)
-    });
+      });
+    }
   }
 
-  removeSensor(sensorType: string) {
-    if (!this.serreData || !this.serreData.sensors) return;
-    const sensorToRemove = this.serreData.sensors.find(s => s.type === sensorType);
+  removeSensor(sensor: Sensor) {
+    if (!this.serreData || !this.serreData.sensors) {
+      return;
+    }
 
-    if (sensorToRemove && sensorToRemove.id !== undefined) {
-      this.serreService.supprimerCapteur(this.serreId, sensorToRemove.id).subscribe({
+
+    if (sensor && sensor.id !== undefined) {
+      this.serreService.supprimerCapteur(this.serreId, sensor.id).subscribe({
         next: () => {
           if (this.serreData && this.serreData.sensors) {
-            this.serreData.sensors = this.serreData.sensors.filter(s => s.id !== sensorToRemove.id);
+            this.serreData.sensors = this.serreData.sensors.filter(s => s.id !== sensor.id);
           }
         },
         error: error => console.error("Erreur suppression:", error)
@@ -137,15 +170,26 @@ export class CapteursComponent implements OnInit, OnDestroy {
     }
   }
 
-  getInputType(sensorType: string): string {
-    if (sensorType === 'windowState') {
-      return 'text';
-    } else {
-      return 'number';
-    }
+  selectSensorToEdit(sensor: Sensor) {
+    this.selectedSensorToAdd = sensor.type;
+    this.existingSensor = sensor;
+    this.valeurCapteur = sensor.valeur;
   }
 
-  formatSensorKey(key: string | undefined): string {
+  resetForm() {
+    this.selectedSensorToAdd = null;
+    this.nouveauCapteur = {};
+    this.existingSensor = null;
+    this.valeurCapteur = null;
+  }
+
+
+
+  getInputType(sensorType: string): string {
+    return sensorType === 'windowState' ? 'text' : 'number';
+  }
+
+  formatSensorKey(key: string | undefined) {
     if (!key) {
       return '';
     }
@@ -154,46 +198,48 @@ export class CapteursComponent implements OnInit, OnDestroy {
 
   getFormattedSensorValue(sensorType: string): any {
     const sensor = this.serreData?.sensors?.find(s => s.type === sensorType);
-
-    console.log("Sensor dans getFormattedSensorValue :", sensor);
     if (!sensor) {
       return 'N/A';
     }
-
     switch (sensorType) {
-      case 'temperature':
-        return sensor.temperature ? `${sensor.temperature}°C` : 'N/A';
-      case 'humidity':
-        return sensor.humidite ? `${sensor.humidite}%` : 'N/A';
-      case 'waterLevel':
-        return sensor.waterLevel ? `${sensor.waterLevel}%` : 'N/A';
-      case 'light':
-        return sensor.valeur ? `${sensor.valeur} lux` : 'N/A';
-      case 'soilMoisture':
-        return sensor.valeur ? `${sensor.valeur}%` : 'N/A';
-      case 'windowState':
-        return sensor.windowState || 'N/A';
-      default:
-        return 'N/A';
+      case 'temperature': return sensor.temperature ? `${sensor.temperature}°C` : 'N/A';
+      case 'humidity': return sensor.humidite ? `${sensor.humidite}%` : 'N/A';
+      case 'waterLevel': return sensor.waterLevel ? `${sensor.waterLevel}%` : 'N/A';
+      case 'light': return sensor.valeur ? `${sensor.valeur} lux` : 'N/A';
+      case 'soilMoisture': return sensor.valeur ? `${sensor.valeur}%` : 'N/A';
+      case 'windowState': return sensor.windowState || 'N/A';
+      default: return sensor.valeur !== undefined && sensor.valeur !== null ? sensor.valeur : 'N/A';
     }
   }
 
 
+  getSensorIconClass(type: string): string {
+    switch (type) {
+      case 'temperature': return 'fas fa-thermometer-half';
+      case 'humidity': return 'fas fa-tint';
+      case 'light': return 'fas fa-sun';
+      case 'soilMoisture': return 'fas fa-seedling';
+      case 'waterLevel': return 'fas fa-water';
+      case 'windowState': return 'fas fa-window-maximize';
+      default: return 'fas fa-question';
+    }
+  }
 
-  getWaterLevelPercentage(): number {
-    const waterLevelSensor = this.serreData?.sensors?.find(s => s.type === 'waterLevel');
+  getTemperatureValue(sensor: Sensor | undefined): number {
+    if (sensor && sensor.type === 'temperature' && sensor.temperature !== undefined && sensor.temperature !== null) {
+      return parseFloat(sensor.temperature);
+    }
+    return 0;
+  }
 
-    return waterLevelSensor && waterLevelSensor.waterLevel ? parseFloat(waterLevelSensor.waterLevel) : 0;
+  getWaterLevelPercentage(sensor: Sensor | undefined): number {
+    if (sensor && sensor.type === 'waterLevel' && sensor.waterLevel !== undefined && sensor.waterLevel !== null) {
+      return parseFloat(sensor.waterLevel);
+    }
+    return 0;
   }
 
   saveChanges(): void {
     this.updateSerre();
-  }
-
-
-  ngOnDestroy() {
-    if (this.serreSubscription) {
-      this.serreSubscription.unsubscribe();
-    }
   }
 }

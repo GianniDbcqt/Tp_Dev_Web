@@ -30,21 +30,6 @@ export class SerreService {
     });
   }
 
-  checkPing(): Promise<boolean> {
-    return this.apiService.checkPing();
-  }
-
-
-  getSerres(): Observable<Serre[]> {
-    return this.apiService.getSerres().pipe(
-      tap(serres => this._serres$.next(serres)), // Met à jour le BehaviorSubject
-      catchError(error => {
-        console.error("Erreur lors de la récupération des serres:", error);
-        return of([]); // Retourne un tableau vide en cas d'erreur
-      })
-    );
-  }
-
   getSerreId(id: number): Observable<Serre | null> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Serre>(url).pipe(  // Utilise this.http
@@ -73,6 +58,61 @@ export class SerreService {
     );
   }
 
+  ajouterCapteur(serreId: number, capteur: any): Observable<Sensor> {
+    const url = `${this.apiUrl}/${serreId}/sensors`;
+    return this.http.post<Sensor>(url, capteur).pipe( // <-  Retourner Observable<Sensor>
+      catchError(this.handleError) // Gérer les erreurs ici si nécessaire
+    );
+  }
+
+  supprimerCapteur(serreId: number, capteurId: number): Observable<any> {
+    return this.apiService.supprimerCapteur(serreId, capteurId)
+      .pipe(
+        tap(() => {
+
+          this.refreshSerres();
+        }),
+        catchError(error => {
+          console.log('Erreur lors de la suppression du capteur :', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  updateCapteur(serreId: number, capteur: Sensor): Observable<Sensor> {
+    const url = `${this.apiUrl}/${serreId}/sensors/${capteur.id}`;
+    return this.http.put<Sensor>(url, capteur).pipe(
+      tap(() => this.refreshSerres()), // Rafraîchir après la mise à jour
+      catchError(this.handleError)
+    );
+  }
+
+  checkPing(): Promise<boolean> {
+    return this.apiService.checkPing();
+  }
+
+
+  getSerres(): Observable<Serre[]> {
+    return this.apiService.getSerres().pipe(
+      tap(serres => this._serres$.next(serres)), // Met à jour le BehaviorSubject
+      catchError(error => {
+        console.error("Erreur lors de la récupération des serres:", error);
+        return of([]); // Retourne un tableau vide en cas d'erreur
+      })
+    );
+  }
+
+  updateSerre(serre: Serre): Observable<Serre> {
+    return this.apiService.updateSerre(serre).pipe(
+      tap(updatedSerre => {
+        this.refreshSerres();
+      }),
+      catchError(error => {
+        console.error("Erreur lors de la mise à jour de la serre :", error);
+        return throwError(() => error);
+      })
+    );
+  }
   addSerre(serre: Serre): Observable<Serre> {
     return this.apiService.addSerre(serre).pipe(
       tap(newSerre => {
@@ -102,43 +142,8 @@ export class SerreService {
     );
   }
 
-  updateSerre(serre: Serre): Observable<Serre> {
-    return this.apiService.updateSerre(serre).pipe(
-      tap(updatedSerre => {
-        this.refreshSerres();
-      }),
-      catchError(error => {
-        console.error("Erreur lors de la mise à jour de la serre :", error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  ajouterCapteur(serreId: number, capteur: Sensor): Observable<any> {
-    return this.apiService.ajouterCapteur(serreId, capteur)
-      .pipe(
-        tap(() => {
-
-          this.refreshSerres();
-        }),
-        catchError(error => {
-          console.log('Erreur lors de l\'ajout du capteur :', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  supprimerCapteur(serreId: number, capteurId: number): Observable<any> {
-    return this.apiService.supprimerCapteur(serreId, capteurId)
-      .pipe(
-        tap(() => {
-
-          this.refreshSerres();
-        }),
-        catchError(error => {
-          console.log('Erreur lors de la suppression du capteur :', error);
-          return throwError(() => error);
-        })
-      );
+  private handleError(error: any) {
+    console.error('Une erreur est survenue', error);
+    return throwError(() => new Error(error));
   }
 }

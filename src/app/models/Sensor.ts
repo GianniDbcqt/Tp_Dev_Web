@@ -7,5 +7,7 @@ export interface Sensor {
   temperature?: string;
   waterLevel?: string;
   humidite?: string;
+  light?: string | number;
+  soilMoisture?: string | number;
   dateReleve?: string;
 }
